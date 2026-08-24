@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Checkout — {{ site_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container"><h1>Checkout</h1></div>
+</div>
+
+<div class="container" style="padding-bottom:48px;">
+  <div style="display:grid; gap:24px;" class="checkout-layout">
+    <div>
+      <div class="card" style="padding:24px;">
+        <h3 style="margin-bottom:16px;">Delivery Details</h3>
+        <form method="post">
+          <div class="form-group">
+            <label>Full Name *</label>
+            <input type="text" name="name" class="form-control" required placeholder="Your full name" value="{{ request.form.name or '' }}">
+          </div>
+          <div class="form-group">
+            <label>Phone Number *</label>
+            <input type="tel" name="phone" class="form-control" required placeholder="98XXXXXXXX" pattern="9[0-9]{9}" value="{{ request.form.phone or '' }}">
+          </div>
+          <div class="form-group">
+            <label>Delivery Address *</label>
+            <textarea name="address" class="form-control" required placeholder="Street, area, house number…">{{ request.form.address or '' }}</textarea>
+          </div>
+          <div class="form-group">
+            <label>Landmark (optional)</label>
+            <input type="text" name="landmark" class="form-control" placeholder="Near temple, school…" value="{{ request.form.landmark or '' }}">
+          </div>
+          <div class="form-group">
+            <label>Order Note (optional)</label>
+            <textarea name="note" class="form-control" rows="2" placeholder="Any special requests…">{{ request.form.note or '' }}</textarea>
+          </div>
+          <div class="form-group">
+            <label>Payment Method</label>
+            <div style="padding:12px 14px; background:#f0fdf4; border-radius:8px; border:1.5px solid #bbf7d0;">
+              💵 <strong>Cash on Delivery</strong>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">Place Order</button>
+        </form>
+      </div>
+    </div>
+    <div>
+      <div class="cart-summary">
+        <h3 style="margin-bottom:16px;">Your Order</h3>
+        {% for item in items %}
+        <div class="summary-row" style="font-size:0.9rem;">
+          <span>{{ item.food.name }} × {{ item.quantity }}</span>
+          <span>Rs {{ '%.0f'|format(item.subtotal) }}</span>
+        </div>
+        {% endfor %}
+        <div class="summary-row mt-2"><span>Subtotal</span><span>Rs {{ '%.0f'|format(subtotal) }}</span></div>
+        <div class="summary-row"><span>Delivery</span><span>Rs {{ '%.0f'|format(delivery_charge) }}</span></div>
+        <div class="summary-row total"><span>Total</span><span>Rs {{ '%.0f'|format(total) }}</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+@media (min-width: 768px) {
+  .checkout-layout { grid-template-columns: 1.4fr 1fr; }
+}
+</style>
+{% endblock %}

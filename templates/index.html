@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+{% block title %}{{ site_name }} — Delicious Food Delivered{% endblock %}
+
+{% block content %}
+<!-- Hero -->
+<section class="hero">
+  <div class="container hero-inner">
+    <h1>{{ hero_title }}</h1>
+    <p>{{ hero_subtitle }}</p>
+    <a href="{{ url_for('menu') }}" class="btn btn-primary">🍽️ Order Now</a>
+  </div>
+</section>
+
+<!-- Promo banners -->
+{% if banners %}
+<div class="container">
+  {% for b in banners %}
+  <div class="promo-banner">
+    <div>
+      {% if b.title %}<h3>{{ b.title }}</h3>{% endif %}
+      {% if b.subtitle %}<p>{{ b.subtitle }}</p>{% endif %}
+    </div>
+    {% if b.button_text and b.button_url %}
+    <a href="{{ b.button_url }}" class="btn btn-secondary">{{ b.button_text }}</a>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- Categories -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <div>
+        <h2 class="section-title">Categories</h2>
+        <p class="section-sub">What are you craving today?</p>
+      </div>
+      <a href="{{ url_for('menu') }}" class="btn btn-outline btn-sm">View All</a>
+    </div>
+    <div class="cat-grid">
+      {% set icons = {'momo':'🥟','chowmein':'🍜','khaja':'🍛','burger':'🍔','pizza':'🍕','chicken':'🍗','snacks':'🍟','drinks':'🥤','other':'🍱'} %}
+      {% for c in categories %}
+      <a href="{{ url_for('menu', category=c.slug) }}" class="cat-card">
+        <div class="icon">{{ icons.get(c.slug, '🍽️') }}</div>
+        <span>{{ c.name }}</span>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- Featured -->
+{% if featured %}
+<section class="section" style="background:#fff; padding:40px 0;">
+  <div class="container">
+    <div class="section-header">
+      <div>
+        <h2 class="section-title">Featured</h2>
+        <p class="section-sub">Our top picks for you</p>
+      </div>
+    </div>
+    <div class="food-grid">
+      {% for f in featured %}
+      <div class="food-card">
+        <a href="{{ url_for('food_detail', slug=f.slug) }}">
+          <div class="food-card-img">
+            {% if f.image %}
+            <img src="{{ url_for('static', filename='uploads/' + f.image) }}" alt="{{ f.name }}">
+            {% else %}
+            🍽️
+            {% endif %}
+          </div>
+        </a>
+        <div class="food-card-body">
+          <h3><a href="{{ url_for('food_detail', slug=f.slug) }}">{{ f.name }}</a></h3>
+          <p>{{ f.description or '' }}</p>
+          <div class="food-card-footer">
+            <span class="price">Rs {{ '%.0f'|format(f.price) }}</span>
+            <button class="btn btn-primary btn-sm" onclick="addToCart({{ f.id }})">+ Add</button>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- Popular -->
+{% if popular %}
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <div>
+        <h2 class="section-title">Popular</h2>
+        <p class="section-sub">Most ordered by our customers</p>
+      </div>
+    </div>
+    <div class="food-grid">
+      {% for f in popular %}
+      <div class="food-card">
+        <a href="{{ url_for('food_detail', slug=f.slug) }}">
+          <div class="food-card-img">
+            {% if f.image %}
+            <img src="{{ url_for('static', filename='uploads/' + f.image) }}" alt="{{ f.name }}">
+            {% else %}
+            🍽️
+            {% endif %}
+          </div>
+        </a>
+        <div class="food-card-body">
+          <h3><a href="{{ url_for('food_detail', slug=f.slug) }}">{{ f.name }}</a></h3>
+          <p>{{ f.description or '' }}</p>
+          <div class="food-card-footer">
+            <span class="price">Rs {{ '%.0f'|format(f.price) }}</span>
+            <button class="btn btn-primary btn-sm" onclick="addToCart({{ f.id }})">+ Add</button>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- How it works -->
+<section class="section" style="background:#fff;">
+  <div class="container">
+    <h2 class="section-title text-center">How It Works</h2>
+    <p class="section-sub text-center">Order in 3 simple steps</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h3>Choose Food</h3>
+        <p>Browse our menu and add your favourites to the cart.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h3>Place Order</h3>
+        <p>Enter your address and pay with Cash on Delivery.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h3>Enjoy Delivery</h3>
+        <p>Track your order live and receive hot food at your door.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Delivery areas -->
+<section class="section">
+  <div class="container">
+    <div class="card" style="padding:28px; text-align:center;">
+      <h2 class="section-title">📍 Delivery Areas</h2>
+      <p style="font-size:1.05rem; margin-top:8px;">{{ delivery_areas }}</p>
+      <p class="text-muted mt-1">Delivery charge: Rs {{ '%.0f'|format(delivery_charge) }}</p>
+    </div>
+  </div>
+</section>
+
+<!-- Reviews -->
+{% if reviews %}
+<section class="section" style="background:#fff;">
+  <div class="container">
+    <h2 class="section-title text-center">What Customers Say</h2>
+    <p class="section-sub text-center">Real reviews from Ratuwamai</p>
+    <div class="review-grid">
+      {% for r in reviews %}
+      <div class="review-card">
+        <div class="review-stars">{% for i in range(r.rating) %}★{% endfor %}</div>
+        <p>"{{ r.comment }}"</p>
+        <strong>— {{ r.customer_name }}</strong>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<!-- Contact CTA -->
+<section class="section">
+  <div class="container">
+    <div class="promo-banner" style="background:linear-gradient(135deg,#370617,#9d0208);">
+      <div>
+        <h3>Hungry? Call us!</h3>
+        <p>📞 {{ phone }} • Cash on Delivery available</p>
+      </div>
+      <a href="tel:{{ phone }}" class="btn btn-primary">Call Now</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

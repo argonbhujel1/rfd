@@ -1,0 +1,54 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Foods{% endblock %}
+
+{% block content %}
+<div class="admin-top">
+  <h1 style="font-size:1.5rem;">Food Menu</h1>
+  <a href="{{ url_for('admin_food_add') }}" class="btn btn-primary btn-sm">+ Add Food</a>
+</div>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Image</th>
+        <th>Name</th>
+        <th>Category</th>
+        <th>Price</th>
+        <th>Status</th>
+        <th>Flags</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for f in foods %}
+      <tr>
+        <td>
+          {% if f.image %}
+          <img src="{{ url_for('static', filename='uploads/' + f.image) }}" alt="" style="width:48px;height:48px;object-fit:cover;border-radius:8px;">
+          {% else %}
+          <span style="font-size:1.5rem;">🍽️</span>
+          {% endif %}
+        </td>
+        <td><strong>{{ f.name }}</strong></td>
+        <td>{{ f.category.name if f.category else '—' }}</td>
+        <td>Rs {{ '%.0f'|format(f.price) }}</td>
+        <td>{% if f.is_available %}<span class="badge-status badge-DELIVERED">Available</span>{% else %}<span class="badge-status badge-CANCELLED">Unavailable</span>{% endif %}</td>
+        <td>
+          {% if f.is_featured %}<span class="badge-status badge-APPROVED">Featured</span>{% endif %}
+          {% if f.is_popular %}<span class="badge-status badge-PREPARING">Popular</span>{% endif %}
+        </td>
+        <td style="white-space:nowrap;">
+          <a href="{{ url_for('admin_food_edit', food_id=f.id) }}" class="btn btn-sm btn-outline">Edit</a>
+          <form method="post" action="{{ url_for('admin_food_delete', food_id=f.id) }}" style="display:inline;" onsubmit="return confirm('Delete this food?')">
+            <button type="submit" class="btn btn-sm" style="background:#fee2e2;color:#991b1b;border:none;">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7" class="text-center text-muted">No foods yet. Add your first item!</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,75 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Order #{{ order.order_number }}{% endblock %}
+
+{% block content %}
+<div class="admin-top">
+  <h1 style="font-size:1.4rem;">Order #{{ order.order_number }}</h1>
+  <a href="{{ url_for('admin_orders') }}" class="btn btn-outline btn-sm">← Back</a>
+</div>
+
+<div style="display:grid; gap:20px; grid-template-columns:1fr;" class="order-detail-grid">
+  <div class="card" style="padding:20px;">
+    <div class="flex justify-between items-center mb-2">
+      <span class="badge-status badge-{{ order.status }}">{{ order.status.replace('_',' ') }}</span>
+      <small class="text-muted">{{ order.created_at.strftime('%d %b %Y, %I:%M %p') }}</small>
+    </div>
+    <h3 style="margin-bottom:12px;">Customer</h3>
+    <p><strong>{{ order.customer_name }}</strong></p>
+    <p>📞 <a href="tel:{{ order.customer_phone }}">{{ order.customer_phone }}</a></p>
+    <p>📍 {{ order.delivery_address }}</p>
+    {% if order.landmark %}<p class="text-muted">Landmark: {{ order.landmark }}</p>{% endif %}
+    {% if order.note %}<p class="text-muted">Note: {{ order.note }}</p>{% endif %}
+
+    <h3 style="margin:20px 0 10px;">Items</h3>
+    {% for item in order.items %}
+    <div class="summary-row">
+      <span>{{ item.food.name if item.food else 'Item' }} × {{ item.quantity }}
+        {% if item.special_instructions %}<br><small class="text-muted">{{ item.special_instructions }}</small>{% endif %}
+      </span>
+      <span>Rs {{ '%.0f'|format(item.subtotal) }}</span>
+    </div>
+    {% endfor %}
+    <div class="summary-row"><span>Subtotal</span><span>Rs {{ '%.0f'|format(order.subtotal) }}</span></div>
+    <div class="summary-row"><span>Delivery</span><span>Rs {{ '%.0f'|format(order.delivery_charge) }}</span></div>
+    <div class="summary-row total"><span>Total</span><span>Rs {{ '%.0f'|format(order.total) }}</span></div>
+  </div>
+
+  <div class="card" style="padding:20px;">
+    <h3 style="margin-bottom:14px;">Update Status</h3>
+    <form method="post">
+      <input type="hidden" name="action" value="status">
+      <div class="form-group">
+        <select name="status" class="form-control">
+          {% for s in ['PENDING','APPROVED','PREPARING','ASSIGNED','OUT_FOR_DELIVERY','DELIVERED','CANCELLED'] %}
+          <option value="{{ s }}" {% if order.status == s %}selected{% endif %}>{{ s.replace('_',' ') }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary btn-sm">Update Status</button>
+    </form>
+
+    <h3 style="margin:24px 0 14px;">Assign Delivery Boy</h3>
+    <form method="post">
+      <input type="hidden" name="action" value="assign">
+      <div class="form-group">
+        <select name="delivery_boy_id" class="form-control" required>
+          <option value="">Select delivery boy…</option>
+          {% for b in boys %}
+          <option value="{{ b.id }}" {% if order.delivery_boy_id == b.id %}selected{% endif %}>{{ b.name }} ({{ b.phone }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit" class="btn btn-secondary btn-sm">Assign</button>
+    </form>
+    {% if order.delivery_boy %}
+    <p class="mt-2 text-muted">Currently assigned: <strong>{{ order.delivery_boy.name }}</strong> — {{ order.delivery_boy.phone }}</p>
+    {% endif %}
+  </div>
+</div>
+
+<style>
+@media (min-width: 768px) {
+  .order-detail-grid { grid-template-columns: 1.5fr 1fr !important; }
+}
+</style>
+{% endblock %}

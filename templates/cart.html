@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Cart — {{ site_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container"><h1>Your Cart</h1></div>
+</div>
+
+<div class="container" style="padding-bottom:48px;">
+  {% if items %}
+  <div style="display:grid; grid-template-columns:1fr; gap:24px;" class="cart-layout">
+    <div>
+      {% for item in items %}
+      <div class="cart-item" data-food-id="{{ item.id }}">
+        <div class="cart-item-img">
+          {% if item.image %}
+          <img src="{{ url_for('static', filename='uploads/' + item.image) }}" alt="">
+          {% else %}🍽️{% endif %}
+        </div>
+        <div class="cart-item-info">
+          <h4>{{ item.name }}</h4>
+          <div class="price">Rs {{ '%.0f'|format(item.price) }}</div>
+          {% if item.instructions %}<small class="text-muted">Note: {{ item.instructions }}</small>{% endif %}
+        </div>
+        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
+          <div class="qty-control">
+            <button type="button" onclick="updateCartQty({{ item.id }}, {{ item.quantity - 1 }})">−</button>
+            <span>{{ item.quantity }}</span>
+            <button type="button" onclick="updateCartQty({{ item.id }}, {{ item.quantity + 1 }})">+</button>
+          </div>
+          <strong>Rs {{ '%.0f'|format(item.subtotal) }}</strong>
+          <button class="btn btn-sm" style="background:#fee2e2;color:#991b1b;border:none;" onclick="removeFromCart({{ item.id }})">Remove</button>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="cart-summary">
+      <h3 style="margin-bottom:16px;">Order Summary</h3>
+      <div class="summary-row"><span>Subtotal</span><span>Rs {{ '%.0f'|format(subtotal) }}</span></div>
+      <div class="summary-row"><span>Delivery Charge</span><span>Rs {{ '%.0f'|format(delivery_charge) }}</span></div>
+      <div class="summary-row total"><span>Total</span><span>Rs {{ '%.0f'|format(total) }}</span></div>
+      <a href="{{ url_for('checkout') }}" class="btn btn-primary btn-block mt-2">Proceed to Checkout</a>
+      <a href="{{ url_for('menu') }}" class="btn btn-outline btn-block mt-1">Continue Shopping</a>
+    </div>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="icon">🛒</div>
+    <h3>Your cart is empty</h3>
+    <p>Add some delicious food from our menu.</p>
+    <a href="{{ url_for('menu') }}" class="btn btn-primary mt-2">Browse Menu</a>
+  </div>
+  {% endif %}
+</div>
+
+<style>
+@media (min-width: 768px) {
+  .cart-layout { grid-template-columns: 1.5fr 1fr !important; }
+}
+</style>
+{% endblock %}

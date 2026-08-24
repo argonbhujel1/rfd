@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}About — {{ site_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container"><h1>About Us</h1></div>
+</div>
+<div class="container" style="padding-bottom:48px; max-width:700px;">
+  <div class="card" style="padding:28px;">
+    <p style="font-size:1.05rem; line-height:1.7;">{{ about_text }}</p>
+    <div style="margin-top:24px;">
+      <p><strong>📍 Address:</strong> {{ address }}</p>
+      <p><strong>📞 Phone:</strong> <a href="tel:{{ phone }}">{{ phone }}</a></p>
+      <p><strong>📧 Email:</strong> {{ email }}</p>
+    </div>
+  </div>
+</div>
+{% endblock %}

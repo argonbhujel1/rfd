@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Order Placed — {{ site_name }}{% endblock %}
+
+{% block content %}
+<div class="container" style="padding:48px 16px; max-width:520px; text-align:center;">
+  <div style="font-size:4rem; margin-bottom:12px;">✅</div>
+  <h1 style="font-size:1.6rem; color:var(--success); margin-bottom:8px;">Order Placed Successfully!</h1>
+  <p class="text-muted mb-2">Thank you for ordering with {{ site_name }}.</p>
+
+  <div class="card" style="padding:24px; text-align:left; margin-bottom:24px;">
+    <div class="summary-row"><span>Order ID</span><strong>#{{ order.order_number }}</strong></div>
+    <div class="summary-row"><span>Total Amount</span><strong>Rs {{ '%.0f'|format(order.total) }}</strong></div>
+    <div class="summary-row"><span>Payment</span><span>Cash on Delivery</span></div>
+    <div class="summary-row"><span>Status</span><span class="badge-status badge-{{ order.status }}">{{ order.status }}</span></div>
+    <div class="summary-row" style="flex-direction:column; align-items:flex-start; gap:4px;">
+      <span>Delivery Address</span>
+      <strong>{{ order.delivery_address }}</strong>
+      {% if order.landmark %}<small class="text-muted">Landmark: {{ order.landmark }}</small>{% endif %}
+    </div>
+  </div>
+
+  <a href="{{ url_for('track_order', order_number=order.order_number) }}" class="btn btn-primary btn-block">📦 Track My Order</a>
+  <a href="{{ url_for('menu') }}" class="btn btn-outline btn-block mt-1">Order More</a>
+</div>
+{% endblock %}

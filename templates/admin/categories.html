@@ -1,0 +1,51 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Categories{% endblock %}
+
+{% block content %}
+<div class="admin-top">
+  <h1 style="font-size:1.5rem;">Categories</h1>
+</div>
+
+<div class="card" style="padding:20px; margin-bottom:24px; max-width:480px;">
+  <h3 style="margin-bottom:12px;">Add Category</h3>
+  <form method="post" class="flex gap-2">
+    <input type="hidden" name="action" value="add">
+    <input type="text" name="name" class="form-control" placeholder="Category name" required>
+    <button type="submit" class="btn btn-primary btn-sm">Add</button>
+  </form>
+</div>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Name</th><th>Slug</th><th>Status</th><th>Foods</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for c in categories %}
+      <tr>
+        <td><strong>{{ c.name }}</strong></td>
+        <td>{{ c.slug }}</td>
+        <td>{% if c.is_active %}<span class="badge-status badge-DELIVERED">Active</span>{% else %}<span class="badge-status badge-CANCELLED">Inactive</span>{% endif %}</td>
+        <td>{{ c.foods.count() }}</td>
+        <td>
+          <form method="post" style="display:inline-flex; gap:6px; align-items:center;">
+            <input type="hidden" name="action" value="edit">
+            <input type="hidden" name="id" value="{{ c.id }}">
+            <input type="text" name="name" value="{{ c.name }}" class="form-control" style="width:120px; padding:6px 10px;">
+            <label style="font-size:0.8rem; white-space:nowrap;"><input type="checkbox" name="is_active" {% if c.is_active %}checked{% endif %}> Active</label>
+            <button type="submit" class="btn btn-sm btn-outline">Save</button>
+          </form>
+          {% if c.foods.count() == 0 %}
+          <form method="post" style="display:inline;" onsubmit="return confirm('Delete?')">
+            <input type="hidden" name="action" value="delete">
+            <input type="hidden" name="id" value="{{ c.id }}">
+            <button type="submit" class="btn btn-sm" style="background:#fee2e2;color:#991b1b;border:none;">Del</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

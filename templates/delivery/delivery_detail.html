@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order #{{ order.order_number }} — Delivery</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body style="padding-bottom:20px; background:#f8f9fa;">
+  <header style="background:var(--secondary); color:#fff; padding:16px;">
+    <div class="container flex justify-between items-center">
+      <a href="{{ url_for('delivery_dashboard') }}" style="color:#fff;">← Back</a>
+      <strong>#{{ order.order_number }}</strong>
+    </div>
+  </header>
+
+  <div class="container" style="padding-top:20px; max-width:560px;">
+    <div class="card" style="padding:20px; margin-bottom:16px;">
+      <span class="badge-status badge-{{ order.status }}">{{ order.status.replace('_',' ') }}</span>
+      <h2 style="margin:12px 0 8px;">{{ order.customer_name }}</h2>
+      <p>📞 <a href="tel:{{ order.customer_phone }}">{{ order.customer_phone }}</a></p>
+      <p style="margin-top:8px;">📍 {{ order.delivery_address }}</p>
+      {% if order.landmark %}<p class="text-muted">Landmark: {{ order.landmark }}</p>{% endif %}
+      {% if order.note %}<p class="text-muted">Note: {{ order.note }}</p>{% endif %}
+
+      <h4 style="margin:16px 0 8px;">Items</h4>
+      {% for item in order.items %}
+      <div class="summary-row" style="font-size:0.9rem;">
+        <span>{{ item.food.name if item.food else 'Item' }} × {{ item.quantity }}</span>
+        <span>Rs {{ '%.0f'|format(item.subtotal) }}</span>
+      </div>
+      {% endfor %}
+      <div class="summary-row total"><span>Collect</span><span>Rs {{ '%.0f'|format(order.total) }} (COD)</span></div>
+    </div>
+
+    <div class="card" style="padding:20px;">
+      <h3 style="margin-bottom:12px;">Delivery Actions</h3>
+      <p id="gpsStatus" class="text-muted" style="font-size:0.85rem; margin-bottom:12px;">GPS not active</p>
+
+      <div class="delivery-actions">
+        {% if order.status == 'ASSIGNED' %}
+        <button class="btn btn-primary" onclick="startLocationShare({{ order.id }})">🚀 Start Delivery & Share GPS</button>
+        {% elif order.status == 'OUT_FOR_DELIVERY' %}
+        <button class="btn btn-primary" onclick="startLocationShare({{ order.id }})">📍 Share Location</button>
+        <button class="btn" style="background:#e5e7eb;" onclick="stopLocationShare()">Stop GPS</button>
+        <button class="btn" style="background:var(--success);color:#fff;" onclick="markDelivered({{ order.id }})">✅ Mark Delivered</button>
+        {% elif order.status == 'DELIVERED' %}
+        <p style="color:var(--success); font-weight:600;">Order delivered. Thank you!</p>
+        {% endif %}
+      </div>
+      <p class="text-muted mt-2" style="font-size:0.8rem;">
+        Location is only shared while this page is open and GPS is enabled. Keep the screen on during delivery.
+      </p>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/delivery.js') }}"></script>
+</body>
+</html>

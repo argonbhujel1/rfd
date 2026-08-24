@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Delivery Dashboard — Ratuwamai</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body style="padding-bottom:20px; background:#f8f9fa;">
+  <header style="background:var(--secondary); color:#fff; padding:16px;">
+    <div class="container flex justify-between items-center">
+      <div>
+        <strong>🛵 {{ current_user.name }}</strong>
+        <div style="font-size:0.85rem; opacity:0.8;">Delivery Dashboard</div>
+      </div>
+      <a href="{{ url_for('delivery_logout') }}" style="color:#fff; font-size:0.9rem;">Logout</a>
+    </div>
+  </header>
+
+  <div class="container" style="padding-top:20px; max-width:600px;">
+    <h2 style="font-size:1.2rem; margin-bottom:16px;">Assigned Orders</h2>
+
+    {% for order in orders %}
+    <div class="delivery-card">
+      <div class="flex justify-between items-center mb-2">
+        <strong>#{{ order.order_number }}</strong>
+        <span class="badge-status badge-{{ order.status }}">{{ order.status.replace('_',' ') }}</span>
+      </div>
+      <p><strong>{{ order.customer_name }}</strong> · <a href="tel:{{ order.customer_phone }}">{{ order.customer_phone }}</a></p>
+      <p style="font-size:0.9rem; margin:6px 0;">📍 {{ order.delivery_address }}</p>
+      {% if order.landmark %}<p class="text-muted" style="font-size:0.85rem;">Landmark: {{ order.landmark }}</p>{% endif %}
+      <p style="font-weight:700; color:var(--primary);">Rs {{ '%.0f'|format(order.total) }}</p>
+
+      <div class="delivery-actions">
+        <a href="{{ url_for('delivery_order_detail', order_id=order.id) }}" class="btn btn-outline btn-sm">Open</a>
+        {% if order.status == 'ASSIGNED' %}
+        <button class="btn btn-primary btn-sm" onclick="startLocationShare({{ order.id }})">Start Delivery</button>
+        {% elif order.status == 'OUT_FOR_DELIVERY' %}
+        <button class="btn btn-primary btn-sm" onclick="startLocationShare({{ order.id }})">Share Location</button>
+        <button class="btn btn-sm" style="background:#e5e7eb;" onclick="stopLocationShare()">Stop GPS</button>
+        <button class="btn btn-sm" style="background:var(--success);color:#fff;" onclick="markDelivered({{ order.id }})">Mark Delivered</button>
+        {% endif %}
+      </div>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="icon">📦</div>
+      <h3>No assigned orders</h3>
+      <p>New deliveries will appear here when assigned by admin.</p>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div id="toast" class="toast"></div>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/delivery.js') }}"></script>
+</body>
+</html>

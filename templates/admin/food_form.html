@@ -1,0 +1,47 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}{{ 'Edit' if food else 'Add' }} Food{% endblock %}
+
+{% block content %}
+<div class="admin-top">
+  <h1 style="font-size:1.4rem;">{{ 'Edit Food' if food else 'Add Food' }}</h1>
+  <a href="{{ url_for('admin_foods') }}" class="btn btn-outline btn-sm">← Back</a>
+</div>
+
+<div class="card" style="padding:24px; max-width:600px;">
+  <form method="post" enctype="multipart/form-data">
+    <div class="form-group">
+      <label>Name *</label>
+      <input type="text" name="name" class="form-control" required value="{{ food.name if food else '' }}">
+    </div>
+    <div class="form-group">
+      <label>Description</label>
+      <textarea name="description" class="form-control" rows="3">{{ food.description if food else '' }}</textarea>
+    </div>
+    <div class="form-group">
+      <label>Price (NPR) *</label>
+      <input type="number" name="price" class="form-control" step="1" min="0" required value="{{ food.price if food else '' }}">
+    </div>
+    <div class="form-group">
+      <label>Category *</label>
+      <select name="category_id" class="form-control" required>
+        {% for c in categories %}
+        <option value="{{ c.id }}" {% if food and food.category_id == c.id %}selected{% endif %}>{{ c.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Image (JPG, PNG, WEBP — max 5MB)</label>
+      <input type="file" name="image" class="form-control" accept=".jpg,.jpeg,.png,.webp">
+      {% if food and food.image %}
+      <p class="mt-1"><img src="{{ url_for('static', filename='uploads/' + food.image) }}" style="height:80px;border-radius:8px;"></p>
+      {% endif %}
+    </div>
+    <div class="form-group" style="display:flex; gap:20px; flex-wrap:wrap;">
+      <label><input type="checkbox" name="is_available" {% if not food or food.is_available %}checked{% endif %}> Available</label>
+      <label><input type="checkbox" name="is_featured" {% if food and food.is_featured %}checked{% endif %}> Featured</label>
+      <label><input type="checkbox" name="is_popular" {% if food and food.is_popular %}checked{% endif %}> Popular</label>
+    </div>
+    <button type="submit" class="btn btn-primary">{{ 'Update Food' if food else 'Add Food' }}</button>
+  </form>
+</div>
+{% endblock %}

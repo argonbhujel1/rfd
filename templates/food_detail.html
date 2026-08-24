@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}{{ food.name }} — {{ site_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <a href="{{ url_for('menu') }}" style="opacity:0.8; font-size:0.9rem;">← Back to Menu</a>
+    <h1 style="margin-top:8px;">{{ food.name }}</h1>
+  </div>
+</div>
+
+<div class="container" style="padding-bottom:48px;">
+  <div class="food-detail-layout">
+    <div class="food-detail-img">
+      {% if food.image %}
+      <img src="{{ url_for('static', filename='uploads/' + food.image) }}" alt="{{ food.name }}">
+      {% else %}
+      🍽️
+      {% endif %}
+    </div>
+    <div>
+      <span class="badge-status badge-DELIVERED" style="margin-bottom:12px;">{{ food.category.name }}</span>
+      <h2 style="font-size:1.5rem; margin:10px 0 8px;">{{ food.name }}</h2>
+      <p class="text-muted" style="margin-bottom:16px;">{{ food.description or 'Delicious local favourite.' }}</p>
+      <div class="price" style="font-size:1.5rem; margin-bottom:20px;">Rs {{ '%.0f'|format(food.price) }}</div>
+
+      <div class="form-group">
+        <label>Quantity</label>
+        <div class="qty-control">
+          <button type="button" onclick="changeQty(-1)">−</button>
+          <span id="qtyVal">1</span>
+          <button type="button" onclick="changeQty(1)">+</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Special instructions (optional)</label>
+        <textarea id="instructions" class="form-control" placeholder="e.g. Extra spicy, no onion…" rows="2"></textarea>
+      </div>
+      <button class="btn btn-primary btn-block" onclick="addDetailToCart()">🛒 Add to Cart</button>
+    </div>
+  </div>
+
+  {% if related %}
+  <div class="mt-3">
+    <h3 class="section-title">You may also like</h3>
+    <div class="food-grid">
+      {% for f in related %}
+      <div class="food-card">
+        <a href="{{ url_for('food_detail', slug=f.slug) }}">
+          <div class="food-card-img">
+            {% if f.image %}<img src="{{ url_for('static', filename='uploads/' + f.image) }}" alt="{{ f.name }}">{% else %}🍽️{% endif %}
+          </div>
+        </a>
+        <div class="food-card-body">
+          <h3>{{ f.name }}</h3>
+          <div class="food-card-footer">
+            <span class="price">Rs {{ '%.0f'|format(f.price) }}</span>
+            <button class="btn btn-primary btn-sm" onclick="addToCart({{ f.id }})">+ Add</button>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let qty = 1;
+function changeQty(d) {
+  qty = Math.max(1, qty + d);
+  document.getElementById('qtyVal').textContent = qty;
+}
+function addDetailToCart() {
+  const instructions = document.getElementById('instructions').value.trim();
+  addToCart({{ food.id }}, qty, instructions);
+}
+</script>
+{% endblock %}

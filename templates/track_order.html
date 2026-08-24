@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}Track Order — {{ site_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container"><h1>Track Your Order</h1></div>
+</div>
+
+<div class="container" style="padding-bottom:48px; max-width:640px;">
+  <!-- Search form -->
+  <form method="get" action="{{ url_for('track_order') }}" class="search-bar mb-3">
+    <input type="text" name="order" class="form-control" placeholder="Enter Order ID e.g. RFD-1001" value="{{ order.order_number if order else '' }}" required>
+    <button type="submit" class="btn btn-primary">Track</button>
+  </form>
+
+  {% if order %}
+  <div class="card" style="padding:24px; margin-bottom:20px;">
+    <div class="flex justify-between items-center flex-wrap gap-2 mb-2">
+      <div>
+        <strong style="font-size:1.1rem;">#{{ order.order_number }}</strong>
+        <div class="text-muted" style="font-size:0.85rem;">{{ order.created_at.strftime('%d %b %Y, %I:%M %p') }}</div>
+      </div>
+      <span class="badge-status badge-{{ order.status }}" id="currentStatus">{{ order.status.replace('_', ' ') }}</span>
+    </div>
+
+    <!-- Timeline -->
+    {% set steps = [
+      ('PENDING', 'Order Placed', 'We received your order'),
+      ('APPROVED', 'Approved', 'Restaurant confirmed your order'),
+      ('PREPARING', 'Preparing', 'Your food is being prepared'),
+      ('ASSIGNED', 'Delivery Boy Assigned', 'A rider will pick up soon'),
+      ('OUT_FOR_DELIVERY', 'Out for Delivery', 'On the way to you'),
+      ('DELIVERED', 'Delivered', 'Enjoy your meal!')
+    ] %}
+    {% set status_list = ['PENDING','APPROVED','PREPARING','ASSIGNED','OUT_FOR_DELIVERY','DELIVERED'] %}
+    {% set current_idx = status_list.index(order.status) if order.status in status_list else -1 %}
+    {% if order.status == 'CANCELLED' %}
+    <div class="alert alert-danger">This order was cancelled.</div>
+    {% else %}
+    <div class="timeline">
+      {% for code, title, desc in steps %}
+      {% set idx = loop.index0 %}
+      <div class="timeline-step {% if idx < current_idx %}done{% elif idx == current_idx %}active{% endif %}">
+        <div class="timeline-dot">{% if idx < current_idx %}✓{% elif idx == current_idx %}●{% else %}{{ idx+1 }}{% endif %}</div>
+        <div class="timeline-content">
+          <h4>{{ title }}</h4>
+          <p>{{ desc }}</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Order items -->
+    <h4 style="margin:20px 0 10px;">Items</h4>
+    {% for item in order.items %}
+    <div class="summary-row" style="font-size:0.9rem;">
+      <span>{{ item.food.name if item.food else 'Item' }} × {{ item.quantity }}</span>
+      <span>Rs {{ '%.0f'|format(item.subtotal) }}</span>
+    </div>
+    {% endfor %}
+    <div class="summary-row total"><span>Total</span><span>Rs {{ '%.0f'|format(order.total) }}</span></div>
+
+    <div style="margin-top:16px; font-size:0.9rem;">
+      <p><strong>Deliver to:</strong> {{ order.delivery_address }}</p>
+      {% if order.landmark %}<p class="text-muted">Landmark: {{ order.landmark }}</p>{% endif %}
+      <p><strong>Phone:</strong> {{ order.customer_phone }}</p>
+      {% if order.delivery_boy %}
+      <p><strong>Delivery Boy:</strong> {{ order.delivery_boy.name }}
+        {% if order.status in ['ASSIGNED','OUT_FOR_DELIVERY'] %}
+        · <a href="tel:{{ order.delivery_boy.phone }}">{{ order.delivery_boy.phone }}</a>
+        {% endif %}
+      </p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Live map when out for delivery -->
+  {% if order.status in ['OUT_FOR_DELIVERY', 'ASSIGNED', 'DELIVERED'] %}
+  <div class="card" style="padding:16px;">
+    <h4 style="margin-bottom:12px;">📍 Live Tracking</h4>
+    <div id="map"></div>
+    <p class="map-info" id="mapInfo">Loading map…</p>
+  </div>
+  {% endif %}
+
+  {% elif request.args.get('order') or request.view_args.get('order_number') %}
+  <div class="empty-state">
+    <div class="icon">📦</div>
+    <h3>Order not found</h3>
+    <p>Please check the Order ID and try again.</p>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="icon">📦</div>
+    <h3>Enter your Order ID</h3>
+    <p>You received it after placing your order (e.g. RFD-1001).</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if order and order.status in ['OUT_FOR_DELIVERY', 'ASSIGNED', 'DELIVERED'] %}
+<script src="{{ url_for('static', filename='js/tracking.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  initTrackingMap('{{ order.order_number }}', {{ order.customer_lat or 'null' }}, {{ order.customer_lng or 'null' }});
+});
+</script>
+{% endif %}
+{% endblock %}

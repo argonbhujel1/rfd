@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Menu — {{ site_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <h1>Our Menu</h1>
+    <p style="opacity:0.85; margin-top:4px;">Fresh local food, ready to order</p>
+  </div>
+</div>
+
+<div class="container" style="padding-bottom:40px;">
+  <!-- Search -->
+  <form class="search-bar" method="get" action="{{ url_for('menu') }}">
+    <input type="text" name="q" value="{{ q }}" placeholder="Search momo, chowmein, pizza…" class="form-control">
+    {% if active_cat %}<input type="hidden" name="category" value="{{ active_cat }}">{% endif %}
+    <button type="submit" class="btn btn-primary">Search</button>
+  </form>
+
+  <!-- Category filters -->
+  <div class="cat-grid" style="margin-bottom:24px;">
+    <a href="{{ url_for('menu', q=q) }}" class="cat-card {% if not active_cat %}active{% endif %}">
+      <div class="icon">🍽️</div>
+      <span>All</span>
+    </a>
+    {% set icons = {'momo':'🥟','chowmein':'🍜','khaja':'🍛','burger':'🍔','pizza':'🍕','chicken':'🍗','snacks':'🍟','drinks':'🥤','other':'🍱'} %}
+    {% for c in categories %}
+    <a href="{{ url_for('menu', category=c.slug, q=q) }}" class="cat-card {% if active_cat == c.slug %}active{% endif %}">
+      <div class="icon">{{ icons.get(c.slug, '🍽️') }}</div>
+      <span>{{ c.name }}</span>
+    </a>
+    {% endfor %}
+  </div>
+
+  {% if foods %}
+  <div class="food-grid">
+    {% for f in foods %}
+    <div class="food-card">
+      <a href="{{ url_for('food_detail', slug=f.slug) }}">
+        <div class="food-card-img">
+          {% if f.image %}
+          <img src="{{ url_for('static', filename='uploads/' + f.image) }}" alt="{{ f.name }}">
+          {% else %}
+          🍽️
+          {% endif %}
+        </div>
+      </a>
+      <div class="food-card-body">
+        <h3><a href="{{ url_for('food_detail', slug=f.slug) }}">{{ f.name }}</a></h3>
+        <p>{{ f.description or '' }}</p>
+        <div class="food-card-footer">
+          <span class="price">Rs {{ '%.0f'|format(f.price) }}</span>
+          <button class="btn btn-primary btn-sm" onclick="addToCart({{ f.id }})">+ Add</button>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="icon">🔍</div>
+    <h3>No food found</h3>
+    <p>Try a different search or category.</p>
+    <a href="{{ url_for('menu') }}" class="btn btn-outline mt-2">View All Menu</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

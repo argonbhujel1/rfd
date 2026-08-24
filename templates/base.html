@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <meta name="description" content="{{ site_name }} — Delicious food delivered to your door in Ratuwamai.">
+  <title>{% block title %}{{ site_name }}{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block head %}{% endblock %}
+</head>
+<body>
+  <!-- Top bar -->
+  <div class="top-bar">
+    <div class="container top-bar-inner">
+      <a href="tel:{{ phone }}" class="top-link">📞 {{ phone }}</a>
+      <span class="top-sep">|</span>
+      <span class="top-text">Cash on Delivery • Fast Delivery</span>
+    </div>
+  </div>
+
+  <!-- Navbar -->
+  <header class="navbar" id="navbar">
+    <div class="container nav-inner">
+      <a href="{{ url_for('index') }}" class="logo">
+        <span class="logo-icon">🍜</span>
+        <span class="logo-text">{{ site_name }}</span>
+      </a>
+      <nav class="nav-links" id="navLinks">
+        <a href="{{ url_for('index') }}" class="{% if request.endpoint == 'index' %}active{% endif %}">Home</a>
+        <a href="{{ url_for('menu') }}" class="{% if request.endpoint == 'menu' %}active{% endif %}">Menu</a>
+        <a href="{{ url_for('about') }}" class="{% if request.endpoint == 'about' %}active{% endif %}">About</a>
+        <a href="{{ url_for('contact') }}" class="{% if request.endpoint == 'contact' %}active{% endif %}">Contact</a>
+        <a href="{{ url_for('track_order') }}" class="{% if request.endpoint == 'track_order' %}active{% endif %}">Track Order</a>
+      </nav>
+      <div class="nav-actions">
+        <a href="{{ url_for('cart') }}" class="cart-btn" aria-label="Cart">
+          🛒 <span class="cart-count" id="cartCount">{{ cart_count }}</span>
+        </a>
+        <button class="hamburger" id="hamburger" aria-label="Menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Flash messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flash-container">
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }}">{{ message }}
+            <button class="alert-close" onclick="this.parentElement.remove()">&times;</button>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container footer-grid">
+      <div class="footer-brand">
+        <div class="logo"><span class="logo-icon">🍜</span> {{ site_name }}</div>
+        <p>{{ get_setting('footer_text', 'Fresh food, fast delivery in Ratuwamai.') if false else 'Fresh local food delivered to your door.' }}</p>
+        <div class="social-links">
+          {% if tiktok %}<a href="{{ tiktok }}" target="_blank" rel="noopener">TikTok</a>{% endif %}
+          {% if facebook %}<a href="{{ facebook }}" target="_blank" rel="noopener">Facebook</a>{% endif %}
+        </div>
+      </div>
+      <div class="footer-links">
+        <h4>Quick Links</h4>
+        <a href="{{ url_for('menu') }}">Menu</a>
+        <a href="{{ url_for('track_order') }}">Track Order</a>
+        <a href="{{ url_for('about') }}">About Us</a>
+        <a href="{{ url_for('contact') }}">Contact</a>
+      </div>
+      <div class="footer-contact">
+        <h4>Contact</h4>
+        <p>📞 {{ phone }}</p>
+        <p>📧 {{ email }}</p>
+        <p>📍 {{ address }}</p>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="container">&copy; {{ now().year if false else 2026 }} {{ site_name }}. All rights reserved.</div>
+    </div>
+  </footer>
+
+  <!-- Mobile bottom nav -->
+  <nav class="bottom-nav">
+    <a href="{{ url_for('index') }}" class="{% if request.endpoint == 'index' %}active{% endif %}">
+      <span>🏠</span><small>Home</small>
+    </a>
+    <a href="{{ url_for('menu') }}" class="{% if request.endpoint == 'menu' %}active{% endif %}">
+      <span>🍽️</span><small>Menu</small>
+    </a>
+    <a href="{{ url_for('cart') }}" class="{% if request.endpoint == 'cart' %}active{% endif %}">
+      <span>🛒</span><small>Cart</small>
+      {% if cart_count %}<i class="badge">{{ cart_count }}</i>{% endif %}
+    </a>
+    <a href="{{ url_for('track_order') }}" class="{% if request.endpoint == 'track_order' %}active{% endif %}">
+      <span>📦</span><small>Track</small>
+    </a>
+  </nav>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/cart.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

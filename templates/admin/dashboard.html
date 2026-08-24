@@ -1,0 +1,49 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="admin-top">
+  <h1 style="font-size:1.5rem;">Dashboard</h1>
+</div>
+
+<div class="stat-grid">
+  <div class="stat-card"><div class="num">{{ stats.total_orders }}</div><div class="label">Total Orders</div></div>
+  <div class="stat-card"><div class="num" style="color:#92400e;">{{ stats.pending }}</div><div class="label">Pending</div></div>
+  <div class="stat-card"><div class="num" style="color:#1e40af;">{{ stats.approved }}</div><div class="label">Approved</div></div>
+  <div class="stat-card"><div class="num" style="color:#c2410c;">{{ stats.preparing }}</div><div class="label">Preparing</div></div>
+  <div class="stat-card"><div class="num" style="color:#0369a1;">{{ stats.out_for_delivery }}</div><div class="label">Out for Delivery</div></div>
+  <div class="stat-card"><div class="num" style="color:#065f46;">{{ stats.delivered }}</div><div class="label">Delivered</div></div>
+  <div class="stat-card"><div class="num">{{ stats.total_foods }}</div><div class="label">Foods</div></div>
+  <div class="stat-card"><div class="num">{{ stats.total_delivery }}</div><div class="label">Delivery Boys</div></div>
+</div>
+
+<h2 style="font-size:1.15rem; margin-bottom:14px;">Recent Orders</h2>
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Order</th>
+        <th>Customer</th>
+        <th>Total</th>
+        <th>Status</th>
+        <th>Date</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for o in recent %}
+      <tr>
+        <td><strong>#{{ o.order_number }}</strong></td>
+        <td>{{ o.customer_name }}<br><small class="text-muted">{{ o.customer_phone }}</small></td>
+        <td>Rs {{ '%.0f'|format(o.total) }}</td>
+        <td><span class="badge-status badge-{{ o.status }}">{{ o.status.replace('_',' ') }}</span></td>
+        <td>{{ o.created_at.strftime('%d %b %H:%M') }}</td>
+        <td><a href="{{ url_for('admin_order_detail', order_id=o.id) }}" class="btn btn-sm btn-outline">View</a></td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6" class="text-center text-muted">No orders yet</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
