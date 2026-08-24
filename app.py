@@ -28,8 +28,11 @@ app = Flask(__name__)
 app.config.from_object(Config)
 
 # Ensure folders exist
-Path(app.config['UPLOAD_FOLDER']).mkdir(parents=True, exist_ok=True)
-Path(app.instance_path).mkdir(parents=True, exist_ok=True)
+try:
+    Path(app.config['UPLOAD_FOLDER']).mkdir(parents=True, exist_ok=True)
+    Path(app.instance_path).mkdir(parents=True, exist_ok=True)
+except Exception:
+    pass
 
 db.init_app(app)
 login_manager = LoginManager(app)
