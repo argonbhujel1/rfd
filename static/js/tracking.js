@@ -70,7 +70,11 @@ async function pollLocation(orderNumber) {
     const updated = data.updated_at ? new Date(data.updated_at).toLocaleTimeString() : '';
 
     if (infoEl) {
-      infoEl.textContent = `🛵 Delivery boy location • Last updated: ${updated}`;
+      let extra = '';
+      if (data.distance_km != null && data.eta_minutes != null) {
+        extra = ` · ~${data.distance_km} km · ≈ ${data.eta_minutes} min away`;
+      }
+      infoEl.textContent = `🛵 Delivery boy location • Last updated: ${updated}${extra}`;
     }
 
     if (!map) return;

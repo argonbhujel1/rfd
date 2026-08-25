@@ -30,6 +30,9 @@
       <p><strong>{{ order.customer_name }}</strong> · <a href="tel:{{ order.customer_phone }}">{{ order.customer_phone }}</a></p>
       <p style="font-size:0.9rem; margin:6px 0;">📍 {{ order.delivery_address }}</p>
       {% if order.landmark %}<p class="text-muted" style="font-size:0.85rem;">Landmark: {{ order.landmark }}</p>{% endif %}
+      {% if order.customer_lat and order.customer_lng %}
+      <p class="text-muted" style="font-size:0.8rem;">📌 GPS shared · ETA available when you start delivery</p>
+      {% endif %}
       <p style="font-weight:700; color:var(--primary);">Rs {{ '%.0f'|format(order.total) }}</p>
 
       <div class="delivery-actions">

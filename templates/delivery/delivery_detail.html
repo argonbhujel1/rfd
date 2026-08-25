@@ -24,6 +24,21 @@
       {% if order.landmark %}<p class="text-muted">Landmark: {{ order.landmark }}</p>{% endif %}
       {% if order.note %}<p class="text-muted">Note: {{ order.note }}</p>{% endif %}
 
+      {% if order.customer_lat and order.customer_lng %}
+      <div style="margin-top:12px; padding:12px; background:#eff6ff; border-radius:8px; border:1px solid #bfdbfe;">
+        <p style="font-weight:600; margin-bottom:4px;">📌 Customer GPS</p>
+        <p style="font-size:0.9rem;">{{ '%.5f'|format(order.customer_lat) }}, {{ '%.5f'|format(order.customer_lng) }}</p>
+        <a class="btn btn-outline btn-sm" style="margin-top:8px;"
+           href="https://www.google.com/maps/dir/?api=1&destination={{ order.customer_lat }},{{ order.customer_lng }}"
+           target="_blank" rel="noopener">🧭 Open in Google Maps</a>
+        <a class="btn btn-outline btn-sm" style="margin-top:8px;"
+           href="https://www.openstreetmap.org/?mlat={{ order.customer_lat }}&mlon={{ order.customer_lng }}#map=16/{{ order.customer_lat }}/{{ order.customer_lng }}"
+           target="_blank" rel="noopener">🗺️ OSM</a>
+      </div>
+      {% else %}
+      <p class="text-muted" style="margin-top:10px; font-size:0.85rem;">Customer did not share GPS. Use address + landmark.</p>
+      {% endif %}
+
       <h4 style="margin:16px 0 8px;">Items</h4>
       {% for item in order.items %}
       <div class="summary-row" style="font-size:0.9rem;">
@@ -36,7 +51,8 @@
 
     <div class="card" style="padding:20px;">
       <h3 style="margin-bottom:12px;">Delivery Actions</h3>
-      <p id="gpsStatus" class="text-muted" style="font-size:0.85rem; margin-bottom:12px;">GPS not active</p>
+      <p id="gpsStatus" class="text-muted" style="font-size:0.85rem; margin-bottom:8px;">GPS not active</p>
+      <p id="etaStatus" style="font-size:0.95rem; font-weight:600; color:var(--primary); margin-bottom:12px; min-height:1.2em;"></p>
 
       <div class="delivery-actions">
         {% if order.status == 'ASSIGNED' %}
@@ -51,11 +67,18 @@
       </div>
       <p class="text-muted mt-2" style="font-size:0.8rem;">
         Location is only shared while this page is open and GPS is enabled. Keep the screen on during delivery.
+        Approximate time is based on straight-line distance and ~18 km/h bike speed.
       </p>
     </div>
   </div>
 
   <div id="toast" class="toast"></div>
+  <script>
+    // Customer coordinates for ETA (null if not shared)
+    window.CUSTOMER_LAT = {{ order.customer_lat if order.customer_lat is not none else 'null' }};
+    window.CUSTOMER_LNG = {{ order.customer_lng if order.customer_lng is not none else 'null' }};
+    window.AVG_SPEED_KMH = 18;
+  </script>
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
   <script src="{{ url_for('static', filename='js/delivery.js') }}"></script>
 </body>

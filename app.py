@@ -27,7 +27,7 @@ load_dotenv()
 app = Flask(__name__)
 app.config.from_object(Config)
 
-# Ensure folders exist
+# Ensure folders exist (safe for serverless / read-only FS)
 try:
     Path(app.config['UPLOAD_FOLDER']).mkdir(parents=True, exist_ok=True)
     Path(app.instance_path).mkdir(parents=True, exist_ok=True)
@@ -96,6 +96,27 @@ def generate_order_number():
     last = Order.query.order_by(Order.id.desc()).first()
     num = (last.id + 1) if last else 1001
     return f"RFD-{num}"
+
+
+def haversine_km(lat1, lon1, lat2, lon2):
+    """Great-circle distance between two points in kilometres."""
+    from math import radians, sin, cos, sqrt, atan2
+    R = 6371.0
+    dlat = radians(lat2 - lat1)
+    dlon = radians(lon2 - lon1)
+    a = sin(dlat / 2) ** 2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon / 2) ** 2
+    c = 2 * atan2(sqrt(a), sqrt(1 - a))
+    return R * c
+
+
+def approx_eta_minutes(distance_km, speed_kmh=None):
+    if speed_kmh is None:
+        speed_kmh = float(app.config.get('AVG_DELIVERY_SPEED_KMH', 18) or 18)
+    if not distance_km or distance_km <= 0 or speed_kmh <= 0:
+        return None
+    minutes = (distance_km / speed_kmh) * 60
+    # clamp to sensible range for local delivery
+    return max(1, min(120, int(round(minutes))))
 
 
 def admin_required(f):
@@ -322,6 +343,21 @@ def checkout():
                                    delivery_charge=delivery, total=total)
 
         phone = phone.replace(' ', '')
+
+        # Optional customer GPS from checkout
+        customer_lat = request.form.get('customer_lat', '').strip()
+        customer_lng = request.form.get('customer_lng', '').strip()
+        lat_val = lng_val = None
+        try:
+            if customer_lat and customer_lng:
+                lat_val = float(customer_lat)
+                lng_val = float(customer_lng)
+                # basic sanity for Nepal-ish region
+                if not (26.0 <= lat_val <= 30.5 and 80.0 <= lng_val <= 88.5):
+                    lat_val = lng_val = None
+        except (TypeError, ValueError):
+            lat_val = lng_val = None
+
         order = Order(
             order_number=generate_order_number(),
             customer_name=name,
@@ -332,7 +368,9 @@ def checkout():
             subtotal=subtotal,
             delivery_charge=delivery,
             total=total,
-            status='PENDING'
+            status='PENDING',
+            customer_lat=lat_val,
+            customer_lng=lng_val,
         )
         db.session.add(order)
         db.session.flush()
@@ -388,6 +426,8 @@ def api_order_location(order_number):
         'has_location': loc is not None,
         'customer_lat': order.customer_lat,
         'customer_lng': order.customer_lng,
+        'distance_km': None,
+        'eta_minutes': None,
     }
     if loc:
         data.update({
@@ -396,6 +436,13 @@ def api_order_location(order_number):
             'updated_at': loc.updated_at.isoformat() + 'Z',
             'delivery_boy_name': order.delivery_boy.name if order.delivery_boy else None,
         })
+        if order.customer_lat is not None and order.customer_lng is not None:
+            try:
+                dist = haversine_km(loc.latitude, loc.longitude, order.customer_lat, order.customer_lng)
+                data['distance_km'] = round(dist, 2)
+                data['eta_minutes'] = approx_eta_minutes(dist)
+            except Exception:
+                pass
     return jsonify(data)
 
 
@@ -817,7 +864,15 @@ def api_delivery_location():
         order.status = 'OUT_FOR_DELIVERY'
         order.updated_at = datetime.utcnow()
     db.session.commit()
-    return jsonify({'ok': True, 'updated_at': loc.updated_at.isoformat() + 'Z'})
+    resp = {'ok': True, 'updated_at': loc.updated_at.isoformat() + 'Z'}
+    if order.customer_lat is not None and order.customer_lng is not None:
+        try:
+            dist = haversine_km(float(lat), float(lng), order.customer_lat, order.customer_lng)
+            resp['distance_km'] = round(dist, 2)
+            resp['eta_minutes'] = approx_eta_minutes(dist)
+        except Exception:
+            pass
+    return jsonify(resp)
 
 
 # --------------- Error Handlers ---------------

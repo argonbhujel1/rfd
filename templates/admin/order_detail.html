@@ -19,6 +19,11 @@
     <p>📍 {{ order.delivery_address }}</p>
     {% if order.landmark %}<p class="text-muted">Landmark: {{ order.landmark }}</p>{% endif %}
     {% if order.note %}<p class="text-muted">Note: {{ order.note }}</p>{% endif %}
+    {% if order.customer_lat and order.customer_lng %}
+    <p style="margin-top:8px;">📌 GPS: {{ '%.5f'|format(order.customer_lat) }}, {{ '%.5f'|format(order.customer_lng) }}
+      <a href="https://www.google.com/maps?q={{ order.customer_lat }},{{ order.customer_lng }}" target="_blank" rel="noopener">Map</a>
+    </p>
+    {% endif %}
 
     <h3 style="margin:20px 0 10px;">Items</h3>
     {% for item in order.items %}

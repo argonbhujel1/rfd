@@ -11,7 +11,10 @@
     <div>
       <div class="card" style="padding:24px;">
         <h3 style="margin-bottom:16px;">Delivery Details</h3>
-        <form method="post">
+        <form method="post" id="checkoutForm">
+          <input type="hidden" name="customer_lat" id="customer_lat" value="">
+          <input type="hidden" name="customer_lng" id="customer_lng" value="">
+
           <div class="form-group">
             <label>Full Name *</label>
             <input type="text" name="name" class="form-control" required placeholder="Your full name" value="{{ request.form.name or '' }}">
@@ -28,6 +31,21 @@
             <label>Landmark (optional)</label>
             <input type="text" name="landmark" class="form-control" placeholder="Near temple, school…" value="{{ request.form.landmark or '' }}">
           </div>
+
+          <!-- Customer location -->
+          <div class="form-group">
+            <label>Your Location <span class="text-muted" style="font-weight:400;">(recommended for faster delivery)</span></label>
+            <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+              <button type="button" class="btn btn-outline" id="btnShareLocation" onclick="captureCustomerLocation()">
+                📍 Share My Location
+              </button>
+              <span id="locationStatus" class="text-muted" style="font-size:0.85rem;">Not shared yet</span>
+            </div>
+            <p class="text-muted" style="font-size:0.8rem; margin-top:6px;">
+              This helps the delivery boy find you and estimate arrival time. Works best on HTTPS / mobile.
+            </p>
+          </div>
+
           <div class="form-group">
             <label>Order Note (optional)</label>
             <textarea name="note" class="form-control" rows="2" placeholder="Any special requests…">{{ request.form.note or '' }}</textarea>
@@ -64,4 +82,41 @@
   .checkout-layout { grid-template-columns: 1.4fr 1fr; }
 }
 </style>
+<script>
+function captureCustomerLocation() {
+  const statusEl = document.getElementById('locationStatus');
+  const btn = document.getElementById('btnShareLocation');
+  if (!navigator.geolocation) {
+    statusEl.textContent = 'GPS not supported on this device';
+    statusEl.style.color = '#c1121f';
+    return;
+  }
+  statusEl.textContent = 'Requesting permission…';
+  statusEl.style.color = '';
+  btn.disabled = true;
+
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      document.getElementById('customer_lat').value = lat;
+      document.getElementById('customer_lng').value = lng;
+      statusEl.textContent = '✅ Location captured (' + lat.toFixed(5) + ', ' + lng.toFixed(5) + ')';
+      statusEl.style.color = '#2d6a4f';
+      btn.disabled = false;
+      btn.textContent = '📍 Location Shared';
+    },
+    (err) => {
+      let msg = 'Could not get location';
+      if (err.code === 1) msg = 'Permission denied. Please allow location access.';
+      else if (err.code === 2) msg = 'GPS unavailable. Check device settings.';
+      else if (err.code === 3) msg = 'Location request timed out.';
+      statusEl.textContent = msg;
+      statusEl.style.color = '#c1121f';
+      btn.disabled = false;
+    },
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
+  );
+}
+</script>
 {% endblock %}
